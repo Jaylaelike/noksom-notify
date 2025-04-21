@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge"
 import { getNotificationHistory } from "@/app/actions"
 import { formatDistanceToNow } from "date-fns"
 import { Bell } from "lucide-react"
+import Link from "next/link"
 
 export default async function NotificationHistory() {
   const notifications = await getNotificationHistory()
@@ -42,12 +43,19 @@ export default async function NotificationHistory() {
                   )}
 
                   {notification.data && (
-                    <details className="text-xs">
-                      <summary className="cursor-pointer text-primary">View data</summary>
-                      <pre className="mt-2 p-2 bg-muted rounded text-xs overflow-x-auto">
-                        {JSON.stringify(notification.data, null, 2)}
-                      </pre>
-                    </details>
+                    <>
+                      <details className="text-xs">
+                        <summary className="cursor-pointer text-primary">View data</summary>
+                        <pre className="mt-2 p-2 bg-muted rounded text-xs overflow-x-auto">
+                          {JSON.stringify(notification.data, null, 2)}
+                        </pre>
+                      </details>
+                      {notification.data.url && (
+                        <Link href={notification.data.url} className="text-xs text-primary underline">
+                          View details
+                        </Link>
+                      )}
+                    </>
                   )}
                 </div>
               </div>

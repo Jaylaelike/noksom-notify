@@ -48,9 +48,16 @@ model Room {
   tokenId       String    @unique
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+
+  // Owner
+  userId        Int
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   // Relations
   notifications Notification[]
   subscriptions RoomSubscription[]
+
+  @@index([userId])
 }
 
 // Junction table for many-to-many relationship between rooms and subscriptions
@@ -64,4 +71,55 @@ model RoomSubscription {
   subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
 
   @@unique([roomId, subscriptionId])
+}
+// NextAuth models for authentication
+model User {
+  id             Int       @id @default(autoincrement())
+  name           String?
+  email          String?   @unique
+  hashedPassword String?
+  emailVerified  DateTime?
+  image          String?
+  accounts       Account[]
+  sessions       Session[]
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  // Rooms owned by the user
+  rooms          Room[]
+}
+
+model Account {
+  id                 Int       @id @default(autoincrement())
+  userId             Int
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?
+  access_token       String?
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?
+  session_state      String?
+  oauth_token_secret String?
+  oauth_token        String?
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           Int       @id @default(autoincrement())
+  sessionToken String    @unique
+  userId       Int
+  expires      DateTime
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String    @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
 }

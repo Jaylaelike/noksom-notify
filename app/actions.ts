@@ -1,10 +1,12 @@
 "use server"
 
-import { PrismaClient } from "@prisma/client"
+// Use the shared Prisma client
+import { prisma } from "@/lib/prismadb"
 import webpush from "web-push"
 import { v4 as uuidv4 } from "uuid"
+import { getServerSession } from "next-auth/next"
+import { authOptions } from "@/app/api/auth/[...nextauth]/route"
 
-const prisma = new PrismaClient()
 
 // Initialize web-push with VAPID keys
 webpush.setVapidDetails(
@@ -89,6 +91,10 @@ export async function saveConfig(config: {
 
 // Create a new notification room
 export async function createRoom(room: { name: string; description: string }) {
+  // Ensure user is authenticated
+  const session = await getServerSession(authOptions)
+  if (!session) throw new Error("Not authenticated")
+  const userId = parseInt(session.user.id)
   try {
     // Generate a unique token ID for the room
     const tokenId = uuidv4()
@@ -98,6 +104,8 @@ export async function createRoom(room: { name: string; description: string }) {
         name: room.name,
         description: room.description,
         tokenId,
+        // associate room with the current user
+        user: { connect: { id: userId } },
       },
     })
 
@@ -116,6 +124,10 @@ export async function createRoom(room: { name: string; description: string }) {
 
 // Get all notification rooms
 export async function getRooms() {
+  // Ensure user is authenticated
+  const session = await getServerSession(authOptions)
+  if (!session) throw new Error("Not authenticated")
+  const userId = parseInt(session.user.id)
   try {
     // Get the current user's subscription (in a real app, you'd use authentication)
     // For simplicity, we'll just get the first subscription
@@ -124,6 +136,7 @@ export async function getRooms() {
     })
 
     const rooms = await prisma.room.findMany({
+      where: { userId },
       orderBy: { createdAt: "desc" },
     })
 
@@ -230,6 +243,53 @@ export async function unsubscribeFromRoom(roomId: number) {
   } catch (error) {
     console.error("Error unsubscribing from room:", error)
     throw new Error("Failed to unsubscribe from notification room")
+  }
+}
+
+// Update an existing notification room
+export async function updateRoom(room: { id: number; name: string; description: string }) {
+  // Ensure user is authenticated
+  const session = await getServerSession(authOptions)
+  if (!session) throw new Error("Not authenticated")
+  const userId = parseInt(session.user.id)
+  try {
+    // Verify the room belongs to the user
+    const existing = await prisma.room.findUnique({ where: { id: room.id } })
+    if (!existing || existing.userId !== userId) throw new Error("Room not found")
+    const updatedRoom = await prisma.room.update({
+      where: { id: room.id },
+      data: {
+        name: room.name,
+        description: room.description,
+      },
+    })
+    return {
+      id: updatedRoom.id,
+      name: updatedRoom.name,
+      description: updatedRoom.description,
+      tokenId: updatedRoom.tokenId,
+    }
+  } catch (error) {
+    console.error("Error updating room:", error)
+    throw new Error("Failed to update notification room")
+  }
+}
+
+// Delete a notification room
+export async function deleteRoom(roomId: number) {
+  // Ensure user is authenticated
+  const session = await getServerSession(authOptions)
+  if (!session) throw new Error("Not authenticated")
+  const userId = parseInt(session.user.id)
+  // Verify the room belongs to the user
+  const existing = await prisma.room.findUnique({ where: { id: roomId } })
+  if (!existing || existing.userId !== userId) throw new Error("Room not found")
+  try {
+    await prisma.room.delete({ where: { id: roomId } })
+    return { id: roomId }
+  } catch (error) {
+    console.error("Error deleting room:", error)
+    throw new Error("Failed to delete notification room")
   }
 }
 
