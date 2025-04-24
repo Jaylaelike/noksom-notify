@@ -8,6 +8,11 @@ export const authOptions = {
   adapter: PrismaAdapter(prisma),
   session: {
     strategy: 'jwt',
+     // keep the token alive for 10 years:
+     maxAge: 10 * 365 * 24 * 60 * 60,     
+     // optionally re‑sign token every 24h to refresh expiry
+    //  updateAge: 24 * 60 * 60,     
+   
   },
   providers: [
     CredentialsProvider({

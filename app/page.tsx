@@ -31,10 +31,10 @@ export default async function Home() {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="subscribe" className="w-full">
-            <TabsList className="grid grid-cols-4 mb-6">
+            <TabsList className="grid grid-cols-3 mb-6">
               <TabsTrigger value="subscribe">Subscribe</TabsTrigger>
               <TabsTrigger value="rooms">Rooms</TabsTrigger>
-              <TabsTrigger value="config">Configuration</TabsTrigger>
+              {/* <TabsTrigger value="config">Configuration</TabsTrigger> */}
               <TabsTrigger value="test">Test Notify</TabsTrigger>
               {/* <TabsTrigger value="history">History</TabsTrigger> */}
             </TabsList>
@@ -44,9 +44,9 @@ export default async function Home() {
             <TabsContent value="rooms">
               <RoomManager />
             </TabsContent>
-            <TabsContent value="config">
+            {/* <TabsContent value="config">
               <ConfigForm />
-            </TabsContent>
+            </TabsContent> */}
             <TabsContent value="test">
               <NotificationForm />
             </TabsContent>
