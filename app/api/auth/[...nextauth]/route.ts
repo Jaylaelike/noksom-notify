@@ -2,7 +2,7 @@ import NextAuth from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import { prisma } from '@/lib/prismadb'
-import bcrypt from 'bcrypt'
+import bcrypt from 'bcryptjs'
 
 export const authOptions = {
   adapter: PrismaAdapter(prisma),
@@ -11,7 +11,7 @@ export const authOptions = {
      // keep the token alive for 10 years:
      maxAge: 10 * 365 * 24 * 60 * 60,     
      // optionally re‑sign token every 24h to refresh expiry
-    //  updateAge: 24 * 60 * 60,     
+    updateAge: 24 * 60 * 60,     
    
   },
   providers: [
